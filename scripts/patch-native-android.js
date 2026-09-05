@@ -23,11 +23,12 @@ if (!fs.existsSync(path.join(ROOT, "android"))) {
   fail("مجلد android/ ماكاش — خصك تديري `npx cap add android` قبل هاذ السكريبت.");
 }
 
-// 1) نسخ VoskSttPlugin.java و MainActivity.java الجديدة
+// 1) نسخ VoskSttPlugin.java و PdfExportPlugin.java و MainActivity.java الجديدة
 fs.mkdirSync(PKG_DIR, { recursive: true });
 fs.copyFileSync(path.join(NATIVE_SRC, "VoskSttPlugin.java"), path.join(PKG_DIR, "VoskSttPlugin.java"));
+fs.copyFileSync(path.join(NATIVE_SRC, "PdfExportPlugin.java"), path.join(PKG_DIR, "PdfExportPlugin.java"));
 fs.copyFileSync(path.join(NATIVE_SRC, "MainActivity.java"), path.join(PKG_DIR, "MainActivity.java"));
-console.log("✅ VoskSttPlugin.java و MainActivity.java اتزرعو.");
+console.log("✅ VoskSttPlugin.java و PdfExportPlugin.java و MainActivity.java اتزرعو.");
 
 // 2) صلاحية الميكروفون فـ AndroidManifest.xml
 const manifestPath = path.join(ANDROID_APP, "src", "main", "AndroidManifest.xml");
