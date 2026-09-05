@@ -1,6 +1,0 @@
-{
-  "version": "1.0.1",
-  "release_notes": "1. تحسين سرعة معالجة نموذج Whisper.\n2. إيقاف الاستهلاك الفائض للذاكرة العشوائية.",
-  "windows_download_url": "https://example.com/downloads/IntissarAI_Windows_Setup_v1.0.1.exe",
-  "linux_appimage_url": "https://example.com/downloads/IntissarAI-x86_64.AppImage"
-}
