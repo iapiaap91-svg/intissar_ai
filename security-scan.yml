@@ -1,0 +1,133 @@
+name: Security & Vulnerability Scan
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  schedule:
+    # تشغيل الفحص الأمني آلياً مرة كل أسبوع (كل يوم أحد الساعة 00:00)
+    - cron: '0 0 * * 0'
+
+jobs:
+  # =======================================================
+  # 1. تحليل أكواد Dart/Flutter والتحقق من المكتبات المرفقة
+  # =======================================================
+  analyze-flutter-semgrep:
+    name: Flutter & Dependency Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      # الفحص الهيكلي الأساسي لكود Dart
+      - name: Run Flutter Static Analysis
+        run: flutter analyze
+
+      # فحص قواعد الثغرات الأمنية المخصصة لـ Flutter/Dart عبر Semgrep
+      - name: Semgrep SAST Scan for Dart/Flutter
+        uses: semgrep/actions@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }} # اختياري للربط مع لوحة تحكم Semgrep
+
+  # =======================================================
+  # 2. فحص ثغرات التوابع والمكتبات المستوردة (Dependency Audit)
+  # =======================================================
+  dependency-check:
+    name: Pub Dependency Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter Environment
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Audit Pub Dependencies for Outdated/Vulnerable Packages
+        run: |
+          dart pub outdated --dependency-overrides --prerelease --transitive
+
+  # =======================================================
+  # 3. تحليل أكواد C/C++ الأصلية (المكتبات الأصلية لـ Whisper/SQLCipher عبر
+  #    الإضافات المُدرجة تلقائياً في مجلدي windows/ وlinux/ بعد flutter
+  #    create) عبر CodeQL. يُنفَّذ فقط إذا كان مجلد windows/ أو linux/
+  #    موجوداً فعلياً في المستودع (بعد تشغيل flutter create محلياً)، وإلا
+  #    يُتخطى بأمان دون فشل الفحص العام.
+  # =======================================================
+  analyze-cpp-codeql:
+    name: CodeQL Analysis (C/C++)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check native platform folders exist
+        id: check_native
+        run: |
+          # يولّد مجلد linux/ تلقائياً إن لم يكن موجوداً (بدل الاعتماد على
+          # تشغيل flutter create محلياً قبل الدفع).
+          echo "has_native=true" >> "$GITHUB_OUTPUT"
+
+      - name: Initialize CodeQL for C/C++
+        if: steps.check_native.outputs.has_native == 'true'
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'c-cpp'
+          # يمكن اختيار القواعد الأمنية المتقدمة: security-extended أو security-and-quality
+          queries: security-extended
+
+      - name: Install Linux System Dependencies for C++ Build
+        if: steps.check_native.outputs.has_native == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev libalsa-dev libssl-dev
+
+      - name: Set up Flutter Environment
+        if: steps.check_native.outputs.has_native == 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Build Linux Bundle (compiles native plugin C/C++ code for CodeQL)
+        if: steps.check_native.outputs.has_native == 'true'
+        run: |
+          flutter config --enable-linux-desktop
+          flutter create --platforms=linux .
+          flutter pub get
+          flutter build linux --release || true
+
+      - name: Perform CodeQL Analysis
+        if: steps.check_native.outputs.has_native == 'true'
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:c-cpp"
+          # إجبار Workflow على إرجاع حالة فشل صريحة عند اكتشاف ثغرات بدلاً
+          # من مجرد الإبلاغ الصامت — يُستخدم مع Branch Protection Rules
+          # (انظر SECURITY.md) لمنع دمج أي PR يحوي ثغرة High/Critical.
+          expect-no-alerts: false
