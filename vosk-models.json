@@ -1,0 +1,24 @@
+{
+  "_ملاحظة": "روابط حقيقية من alphacephei.com/vosk/models (مصدر Vosk الرسمي). تحقّقي منها من وقت لوقت لأن أرقام الإصدارات تتغيّر.",
+  "_ملاحظة_مهمة_عربي": "لا يوجد نموذج 'صغير' (small) رسمي للعربية حالياً — أصغر نموذج عربي متوفر هو vosk-model-ar-mgb2-0.4 بحجم ~318MB (مقابل ~40MB للإنجليزية والفرنسية). هذا يكبّر حجم APK كثيراً إذا ضُمّن. راجعي القسم الأخير من الرد للخيارات.",
+  "models": [
+    {
+      "lang": "en",
+      "name": "vosk-model-small-en-us-0.15",
+      "url": "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip",
+      "approxSizeMB": 40
+    },
+    {
+      "lang": "fr",
+      "name": "vosk-model-small-fr-0.22",
+      "url": "https://alphacephei.com/vosk/models/vosk-model-small-fr-0.22.zip",
+      "approxSizeMB": 41
+    },
+    {
+      "lang": "ar",
+      "name": "vosk-model-ar-mgb2-0.4",
+      "url": "https://alphacephei.com/vosk/models/vosk-model-ar-mgb2-0.4.zip",
+      "approxSizeMB": 318
+    }
+  ]
+}

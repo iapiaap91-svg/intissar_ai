@@ -1,0 +1,11 @@
+{
+  "appId": "com.intissarai.app",
+  "appName": "انتصار AI",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
