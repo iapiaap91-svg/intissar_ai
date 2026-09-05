@@ -52,16 +52,16 @@ public class PdfExportPlugin extends Plugin {
             int contentW = PAGE_W - (MARGIN * 2);
             int contentTop = MARGIN + 68;
             int contentH = PAGE_H - contentTop - MARGIN;
-            StaticLayout layout = new StaticLayout(
-                text,
-                tp,
-                contentW,
-                Layout.Alignment.ALIGN_NORMAL,
-                1.85f,
-                0f,
-                false,
-                TextDirectionHeuristics.RTL
-            );
+            // ملاحظة: StaticLayout ماعندهاش constructor مباشر ياخذ
+            // TextDirectionHeuristic (هذا سبب خطأ الترجمة السابق) — الطريقة
+            // الصحيحة منذ Android 6.0 (API 23) هي StaticLayout.Builder.
+            StaticLayout layout = StaticLayout.Builder
+                .obtain(text, 0, text.length(), tp, contentW)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0f, 1.85f)
+                .setIncludePad(false)
+                .setTextDirection(TextDirectionHeuristics.RTL)
+                .build();
 
             int pages = Math.max(1, (int)Math.ceil((double)Math.max(1, layout.getHeight()) / contentH));
             Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
